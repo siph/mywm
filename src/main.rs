@@ -6,8 +6,11 @@ use penrose::{
         bindings::KeyEventHandler,
         config::Config,
         helpers::index_selectors,
-        manager::WindowManager,
+        manager::WindowManager, 
+        Layout,
+        layout::LayoutConf,
     },
+    contrib::layouts::dwindle,
     logging_error_handler,
     xcb::new_xcb_backed_window_manager,
     Backward, Forward, Less, More, Selector
@@ -15,19 +18,27 @@ use penrose::{
 
 use simplelog::{LevelFilter, SimpleLogger};
 
-
 // Replace these with your preferred terminal and program launcher
 const TERMINAL: &str = "kitty";
 const LAUNCHER: &str = "dmenu_run";
 
 
 fn main() -> penrose::Result<()> {
-    // Initialise the logger (use LevelFilter::Debug to enable debug logging)
+
     if let Err(e) = SimpleLogger::init(LevelFilter::Info, simplelog::Config::default()) {
         panic!("unable to set log level: {}", e);
     };
 
-    let config = Config::default();
+    let dwindle_layout = Layout::new("[dwindle]", LayoutConf::default(), dwindle, 1, 0.6);
+
+    let config = Config::default()
+        .builder()
+        .show_bar(true)
+        .top_bar(false)
+        .layouts(vec![dwindle_layout])
+        .build()
+        .unwrap();
+
     let key_bindings = gen_keybindings! {
         // Program launchers
         "M-p" => run_external!(LAUNCHER);
@@ -42,7 +53,7 @@ fn main() -> penrose::Result<()> {
         "M-S-j" => run_internal!(drag_client, Forward);
         "M-S-k" => run_internal!(drag_client, Backward);
         "M-S-f" => run_internal!(toggle_client_fullscreen, &Selector::Focused);
-        "M-S-q" => run_internal!(kill_client);
+        "M-c" => run_internal!(kill_client);
 
         // workspace management
         "M-Tab" => run_internal!(toggle_workspace);
