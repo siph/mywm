@@ -8,7 +8,10 @@ use penrose::{
         helpers::index_selectors,
         manager::WindowManager, 
         Layout,
-        layout::LayoutConf,
+        layout::{
+            LayoutConf,
+            side_stack,
+        },
     },
     contrib::layouts::dwindle,
     logging_error_handler,
@@ -30,12 +33,13 @@ fn main() -> penrose::Result<()> {
     };
 
     let dwindle_layout = Layout::new("[dwindle]", LayoutConf::default(), dwindle, 1, 0.6);
+    let side_stack_layout = Layout::new("[<>=]", LayoutConf::default(), side_stack, 1, 0.6);
 
     let config = Config::default()
         .builder()
         .show_bar(true)
         .top_bar(false)
-        .layouts(vec![dwindle_layout])
+        .layouts(vec![side_stack_layout, dwindle_layout])
         .build()
         .unwrap();
 
