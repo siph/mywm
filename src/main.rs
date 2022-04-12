@@ -1,6 +1,8 @@
 #[macro_use]
 extern crate penrose;
 
+use std::convert::TryFrom;
+
 use penrose::{
     core::{
         bindings::KeyEventHandler,
@@ -11,12 +13,12 @@ use penrose::{
         layout::{
             LayoutConf,
             side_stack,
-        },
+        }, hooks::Hooks,
     },
     contrib::layouts::dwindle,
     logging_error_handler,
-    xcb::new_xcb_backed_window_manager,
-    Backward, Forward, Less, More, Selector
+    xcb::{new_xcb_backed_window_manager, XcbDraw},
+    Backward, Forward, Less, More, Selector, draw::{dwm_bar, TextStyle}, __test_helpers::Color, XcbConnection
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
@@ -43,6 +45,25 @@ fn main() -> penrose::Result<()> {
         .build()
         .unwrap();
 
+    // let bar = dwm_bar(
+    //     XcbDraw::new()?, 
+    //     10, 
+    //     &TextStyle{
+    //         font: "ariel".to_string(),
+    //         point_size: 10,
+    //         fg: Color::try_from("white".to_string())?,
+    //         bg: None,
+    //         padding: (2.0, 2.0),
+    //     }, 
+    //     Color::try_from("white".to_string())?,
+    //     Color::try_from("white".to_string())?,
+    //     config.workspaces().clone(),
+    // )?;
+
+    // let hooks: Hooks<XcbConnection> = vec![
+    //     Box::new(bar),
+    // ];
+
     let key_bindings = gen_keybindings! {
         // Program launchers
         "M-p" => run_external!(LAUNCHER);
@@ -56,7 +77,7 @@ fn main() -> penrose::Result<()> {
         "M-k" => run_internal!(cycle_client, Backward);
         "M-S-j" => run_internal!(drag_client, Forward);
         "M-S-k" => run_internal!(drag_client, Backward);
-        "M-S-f" => run_internal!(toggle_client_fullscreen, &Selector::Focused);
+        "M-f" => run_internal!(toggle_client_fullscreen, &Selector::Focused);
         "M-c" => run_internal!(kill_client);
 
         // workspace management
@@ -69,8 +90,8 @@ fn main() -> penrose::Result<()> {
         "M-S-grave" => run_internal!(cycle_layout, Backward);
         "M-A-Up" => run_internal!(update_max_main, More);
         "M-A-Down" => run_internal!(update_max_main, Less);
-        "M-A-Right" => run_internal!(update_main_ratio, More);
-        "M-A-Left" => run_internal!(update_main_ratio, Less);
+        "M-l" => run_internal!(update_main_ratio, More);
+        "M-h" => run_internal!(update_main_ratio, Less);
 
         map: { "1", "2", "3", "4", "5", "6", "7", "8", "9" } to index_selectors(9) => {
              "M-{}" => focus_workspace (REF);
