@@ -13,12 +13,16 @@ use penrose::{
         layout::{
             LayoutConf,
             side_stack,
-        }, hooks::Hooks,
+        }, hooks::{
+            Hooks,
+            Hook,
+        },
+        xconnection::XConn,
     },
     contrib::layouts::dwindle,
     logging_error_handler,
     xcb::{new_xcb_backed_window_manager, XcbDraw},
-    Backward, Forward, Less, More, Selector, draw::{dwm_bar, TextStyle}, __test_helpers::Color, XcbConnection
+    Backward, Forward, Less, More, Selector, draw::{dwm_bar, TextStyle}, __test_helpers::Color, XcbConnection, Result
 };
 
 use simplelog::{LevelFilter, SimpleLogger};
@@ -76,6 +80,7 @@ fn main() -> penrose::Result<()> {
 
     let hooks: Hooks<XcbConnection> = vec![
         Box::new(bar),
+        Box::new(StartupScript::new("/home/chris/.MYWM")),
     ];
 
     let key_bindings = gen_keybindings! {
@@ -115,4 +120,21 @@ fn main() -> penrose::Result<()> {
 
     let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler())?;
     wm.grab_keys_and_run(key_bindings, map!{})
+}
+
+
+pub struct StartupScript {
+    path: String,
+}
+
+impl StartupScript {
+    pub fn new(s: impl Into<String>) -> Self {
+        Self { path: s.into() }
+    }
+}
+
+impl<X: XConn> Hook<X> for StartupScript {
+    fn startup(&mut self, _: &mut WindowManager<X>) -> Result<()> {
+        spawn!(&self.path)
+    }
 }
