@@ -27,6 +27,16 @@ use simplelog::{LevelFilter, SimpleLogger};
 const TERMINAL: &str = "kitty";
 const LAUNCHER: &str = "dmenu_run";
 
+const HEIGHT: usize = 18;
+
+const PROFONT: &str = "JetBrainsMono Nerd Font";
+
+const BLACK: u32 = 0x282828ff;
+const GREY: u32 = 0x3c3836ff;
+const WHITE: u32 = 0xebdbb2ff;
+const PURPLE: u32 = 0xb16286ff;
+const BLUE: u32 = 0x458588ff;
+const RED: u32 = 0xcc241dff;
 
 fn main() -> penrose::Result<()> {
 
@@ -40,29 +50,34 @@ fn main() -> penrose::Result<()> {
     let config = Config::default()
         .builder()
         .show_bar(true)
-        .top_bar(false)
+        .top_bar(true)
         .layouts(vec![side_stack_layout, dwindle_layout])
         .build()
         .unwrap();
 
-    // let bar = dwm_bar(
-    //     XcbDraw::new()?, 
-    //     10, 
-    //     &TextStyle{
-    //         font: "ariel".to_string(),
-    //         point_size: 10,
-    //         fg: Color::try_from("white".to_string())?,
-    //         bg: None,
-    //         padding: (2.0, 2.0),
-    //     }, 
-    //     Color::try_from("white".to_string())?,
-    //     Color::try_from("white".to_string())?,
-    //     config.workspaces().clone(),
-    // )?;
+    let style = TextStyle {
+        font: PROFONT.to_string(),
+        point_size: 11,
+        fg: WHITE.into(),
+        bg: Some(BLACK.into()),
+        padding: (2.0, 2.0),
+    };
 
-    // let hooks: Hooks<XcbConnection> = vec![
-    //     Box::new(bar),
-    // ];
+    let highlight = BLUE;
+    let empty_ws = GREY;
+    let draw = XcbDraw::new()?;
+    let bar = dwm_bar(
+        draw,
+        HEIGHT,
+        &style,
+        highlight,
+        empty_ws,
+        config.workspaces().clone(),
+    )?;
+
+    let hooks: Hooks<XcbConnection> = vec![
+        Box::new(bar),
+    ];
 
     let key_bindings = gen_keybindings! {
         // Program launchers
@@ -99,6 +114,6 @@ fn main() -> penrose::Result<()> {
          };
     };
 
-    let mut wm = new_xcb_backed_window_manager(config, vec![], logging_error_handler())?;
+    let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler())?;
     wm.grab_keys_and_run(key_bindings, map!{})
 }
