@@ -41,6 +41,7 @@ const WHITE: u32 = 0xebdbb2ff;
 const PURPLE: u32 = 0xb16286ff;
 const BLUE: u32 = 0x458588ff;
 const RED: u32 = 0xcc241dff;
+const GOKU: &str = "#f0833a";
 
 fn main() -> penrose::Result<()> {
 
@@ -48,7 +49,7 @@ fn main() -> penrose::Result<()> {
         panic!("unable to set log level: {}", e);
     };
 
-    let side_stack_layout = Layout::new("[<>=]", LayoutConf::default(), side_stack, 1, 0.6);
+    let side_stack_layout = Layout::new("[<><]", LayoutConf::default(), side_stack, 1, 0.6);
 
     let config = Config::default()
         .builder()
@@ -73,7 +74,8 @@ fn main() -> penrose::Result<()> {
         draw,
         HEIGHT,
         &style,
-        highlight,
+        // highlight,
+        Color::try_from(GOKU)?,
         empty_ws,
         config.workspaces().clone(),
     )?;
