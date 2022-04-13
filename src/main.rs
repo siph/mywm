@@ -2,7 +2,6 @@
 extern crate penrose;
 
 use std::convert::TryFrom;
-
 use penrose::{
     core::{
         bindings::KeyEventHandler,
@@ -24,24 +23,11 @@ use penrose::{
     xcb::{new_xcb_backed_window_manager, XcbDraw},
     Backward, Forward, Less, More, Selector, draw::{dwm_bar, TextStyle}, __test_helpers::Color, XcbConnection, Result
 };
-
 use simplelog::{LevelFilter, SimpleLogger};
+use MYWM::{colors, styles, hooks};
 
-// Replace these with your preferred terminal and program launcher
-const TERMINAL: &str = "kitty";
-const LAUNCHER: &str = "dmenu_run";
-
-const HEIGHT: usize = 18;
-
-const PROFONT: &str = "JetBrainsMono Nerd Font";
-
-const BLACK: u32 = 0x282828ff;
-const GREY: u32 = 0x3c3836ff;
-const WHITE: u32 = 0xebdbb2ff;
-const PURPLE: u32 = 0xb16286ff;
-const BLUE: u32 = 0x458588ff;
-const RED: u32 = 0xcc241dff;
-const GOKU: &str = "#f0833a";
+pub const TERMINAL: &str = "kitty";
+pub const LAUNCHER: &str = "dmenu_run";
 
 fn main() -> penrose::Result<()> {
 
@@ -65,29 +51,28 @@ fn main() -> penrose::Result<()> {
         .unwrap();
 
     let style = TextStyle {
-        font: PROFONT.to_string(),
+        font: styles::PROFONT.to_string(),
         point_size: 11,
-        fg: WHITE.into(),
-        bg: Some(BLACK.into()),
+        fg: colors::WHITE.into(),
+        bg: Some(colors::BLACK.into()),
         padding: (2.0, 2.0),
     };
 
-    let highlight = BLUE;
-    let empty_ws = GREY;
+    let empty_ws = colors::GREY;
     let draw = XcbDraw::new()?;
-    // let bar = dwm_bar(
-    //     draw,
-    //     HEIGHT,
-    //     &style,
-    //     // highlight,
-    //     Color::try_from(GOKU)?,
-    //     empty_ws,
-    //     config.workspaces().clone(),
-    // )?;
+
+    let bar = dwm_bar(
+        draw,
+        styles::HEIGHT,
+        &style,
+        Color::try_from(colors::GOKU)?,
+        empty_ws,
+        config.workspaces().clone(),
+    )?;
 
     let hooks: Hooks<XcbConnection> = vec![
-        // Box::new(bar),
-        Box::new(StartupScript::new("/home/chris/.MYWM")),
+        Box::new(bar),
+        Box::new(hooks::StartupScript::new("/home/chris/.MYWM")),
     ];
 
     let key_bindings = gen_keybindings! {
@@ -127,21 +112,4 @@ fn main() -> penrose::Result<()> {
 
     let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler())?;
     wm.grab_keys_and_run(key_bindings, map!{})
-}
-
-
-pub struct StartupScript {
-    path: String,
-}
-
-impl StartupScript {
-    pub fn new(s: impl Into<String>) -> Self {
-        Self { path: s.into() }
-    }
-}
-
-impl<X: XConn> Hook<X> for StartupScript {
-    fn startup(&mut self, _: &mut WindowManager<X>) -> Result<()> {
-        spawn!(&self.path)
-    }
 }
