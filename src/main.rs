@@ -41,6 +41,7 @@ fn main() -> penrose::Result<()> {
         .top_bar(true)
         .layouts(vec![side_stack_layout])
         .floating_classes(floating_classes)
+        .focused_border(colors::GOKU)?
         .build()
         .unwrap();
 
@@ -66,7 +67,7 @@ fn main() -> penrose::Result<()> {
 
     let hooks: Hooks<XcbConnection> = vec![
         Box::new(bar),
-        Box::new(hooks::StartupScript::new("/home/chris/.MYWM")),
+        Box::new(hooks::StartupScript::new(mywm::PATH_TO_START_SCRIPT)),
     ];
 
     let key_bindings = gen_keybindings! {
