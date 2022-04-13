@@ -75,18 +75,18 @@ fn main() -> penrose::Result<()> {
     let highlight = BLUE;
     let empty_ws = GREY;
     let draw = XcbDraw::new()?;
-    let bar = dwm_bar(
-        draw,
-        HEIGHT,
-        &style,
-        // highlight,
-        Color::try_from(GOKU)?,
-        empty_ws,
-        config.workspaces().clone(),
-    )?;
+    // let bar = dwm_bar(
+    //     draw,
+    //     HEIGHT,
+    //     &style,
+    //     // highlight,
+    //     Color::try_from(GOKU)?,
+    //     empty_ws,
+    //     config.workspaces().clone(),
+    // )?;
 
     let hooks: Hooks<XcbConnection> = vec![
-        Box::new(bar),
+        // Box::new(bar),
         Box::new(StartupScript::new("/home/chris/.MYWM")),
     ];
 
