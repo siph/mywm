@@ -51,11 +51,16 @@ fn main() -> penrose::Result<()> {
 
     let side_stack_layout = Layout::new("[[]=]", LayoutConf::default(), side_stack, 1, 0.6);
 
+    let floating_classes = vec![
+        "polybar",
+    ];
+
     let config = Config::default()
         .builder()
         .show_bar(true)
         .top_bar(true)
         .layouts(vec![side_stack_layout])
+        .floating_classes(floating_classes)
         .build()
         .unwrap();
 
