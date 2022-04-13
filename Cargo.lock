@@ -3,14 +3,6 @@
 version = 3
 
 [[package]]
-name = "MYWM"
-version = "0.1.0"
-dependencies = [
- "penrose",
- "simplelog",
-]
-
-[[package]]
 name = "anyhow"
 version = "1.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -235,6 +227,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6389c490849ff5bc16be905ae24bc913a9c8892e19b2341dbc175e14c341c2b8"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "mywm"
+version = "0.1.0"
+dependencies = [
+ "penrose",
+ "simplelog",
 ]
 
 [[package]]

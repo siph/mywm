@@ -4,27 +4,21 @@ extern crate penrose;
 use std::convert::TryFrom;
 use penrose::{
     core::{
-        bindings::KeyEventHandler,
         config::Config,
         helpers::index_selectors,
-        manager::WindowManager, 
         Layout,
         layout::{
             LayoutConf,
             side_stack,
-        }, hooks::{
-            Hooks,
-            Hook,
-        },
-        xconnection::XConn,
+        }, 
+        hooks::Hooks,
     },
-    contrib::layouts::dwindle,
     logging_error_handler,
     xcb::{new_xcb_backed_window_manager, XcbDraw},
-    Backward, Forward, Less, More, Selector, draw::{dwm_bar, TextStyle}, __test_helpers::Color, XcbConnection, Result
+    Backward, Forward, Less, More, Selector, draw::{dwm_bar, TextStyle}, __test_helpers::Color, XcbConnection
 };
 use simplelog::{LevelFilter, SimpleLogger};
-use MYWM::{colors, styles, hooks};
+use mywm::{colors, styles, hooks};
 
 pub const TERMINAL: &str = "kitty";
 pub const LAUNCHER: &str = "dmenu_run";

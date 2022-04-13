@@ -1,5 +1,5 @@
 [package]
-name = "MYWM"
+name = "mywm"
 version = "0.1.0"
 edition = "2021"
 authors = ["Chris Dawkins"]
