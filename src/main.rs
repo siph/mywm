@@ -49,7 +49,7 @@ fn main() -> penrose::Result<()> {
         panic!("unable to set log level: {}", e);
     };
 
-    let side_stack_layout = Layout::new("[<><]", LayoutConf::default(), side_stack, 1, 0.6);
+    let side_stack_layout = Layout::new("[[]=]", LayoutConf::default(), side_stack, 1, 0.6);
 
     let config = Config::default()
         .builder()
