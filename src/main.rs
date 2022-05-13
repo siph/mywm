@@ -43,7 +43,7 @@ fn main() -> penrose::Result<()> {
         .floating_classes(floating_classes)
         .focused_border(colors::GOKU)?
         .build()
-        .unwrap();
+        .expect("Unable to build configuration");
 
     let style = TextStyle {
         font: styles::PROFONT.to_string(),
