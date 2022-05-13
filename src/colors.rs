@@ -1,7 +1,7 @@
-pub const BLACK: u32 = 0x282828ff;
-pub const GREY: u32 = 0x3c3836ff;
-pub const WHITE: u32 = 0xebdbb2ff;
-pub const PURPLE: u32 = 0xb16286ff;
-pub const BLUE: u32 = 0x458588ff;
-pub const RED: u32 = 0xcc241dff;
+pub const BLACK: u32 = "#000000";
+pub const GREY: u32 = "#808080";
+pub const WHITE: u32 = "#ffffff";
+pub const PURPLE: u32 = "#a020f0";
+pub const BLUE: u32 = "#0000ff";
+pub const RED: u32 = "#ff0000";
 pub const GOKU: &str = "#f0833a";
