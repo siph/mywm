@@ -22,6 +22,7 @@ use mywm::{colors, styles, hooks};
 
 pub const TERMINAL: &str = "kitty";
 pub const LAUNCHER: &str = "dmenu_run";
+pub const PATH_TO_START_SCRIPT: &str = "/home/chris/.mywm";
 
 fn main() -> penrose::Result<()> {
 
@@ -48,12 +49,12 @@ fn main() -> penrose::Result<()> {
     let style = TextStyle {
         font: styles::PROFONT.to_string(),
         point_size: 11,
-        fg: colors::WHITE.into(),
-        bg: Some(colors::BLACK.into()),
+        fg: Color::try_from(colors::WHITE)?,
+        bg: Some(Color::try_from(colors::BLACK)?),
         padding: (2.0, 2.0),
     };
 
-    let empty_ws = colors::GREY;
+    let empty_ws = Color::try_from(colors::GREY)?;
     let draw = XcbDraw::new()?;
 
     let bar = dwm_bar(
@@ -67,7 +68,7 @@ fn main() -> penrose::Result<()> {
 
     let hooks: Hooks<XcbConnection> = vec![
         Box::new(bar),
-        Box::new(hooks::StartupScript::new(mywm::PATH_TO_START_SCRIPT)),
+        Box::new(hooks::StartupScript::new(PATH_TO_START_SCRIPT)),
     ];
 
     let key_bindings = gen_keybindings! {
