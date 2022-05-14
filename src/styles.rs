@@ -1,3 +1,5 @@
-pub const HEIGHT: usize = 18;
+pub mod colors;
+pub mod dimensions;
+
 pub const PROFONT: &str = "JetBrainsMono Nerd Font";
 

@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate penrose;
 
+mod hooks;
+mod styles;
+
 use std::convert::TryFrom;
 use penrose::{
     core::{
@@ -18,7 +21,11 @@ use penrose::{
     Backward, Forward, Less, More, Selector, draw::{dwm_bar, TextStyle}, __test_helpers::Color, XcbConnection
 };
 use simplelog::{LevelFilter, SimpleLogger};
-use mywm::{colors, styles, hooks};
+use styles::{
+    colors,
+    dimensions,
+    PROFONT,
+};
 
 pub const TERMINAL: &str = "kitty";
 pub const LAUNCHER: &str = "dmenu_run";
@@ -47,7 +54,7 @@ fn main() -> penrose::Result<()> {
         .expect("Unable to build configuration");
 
     let style = TextStyle {
-        font: styles::PROFONT.to_string(),
+        font: PROFONT.to_string(),
         point_size: 11,
         fg: Color::try_from(colors::WHITE)?,
         bg: Some(Color::try_from(colors::BLACK)?),
@@ -59,7 +66,7 @@ fn main() -> penrose::Result<()> {
 
     let bar = dwm_bar(
         draw,
-        styles::HEIGHT,
+        dimensions::HEIGHT,
         &style,
         Color::try_from(colors::GOKU)?,
         empty_ws,
