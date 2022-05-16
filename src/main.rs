@@ -6,6 +6,7 @@ mod styles;
 mod config;
 
 use std::convert::TryFrom;
+use clap::Parser;
 use penrose::{
     core::{
         config::Config,
@@ -27,16 +28,16 @@ use styles::{
     dimensions,
     PROFONT,
 };
+use config as application_config;
 
-pub const TERMINAL: &str = "kitty";
-pub const LAUNCHER: &str = "dmenu_run";
-pub const PATH_TO_START_SCRIPT: &str = "/home/chris/.mywm";
 
 fn main() -> penrose::Result<()> {
 
     if let Err(e) = SimpleLogger::init(LevelFilter::Info, simplelog::Config::default()) {
         panic!("unable to set log level: {}", e);
     };
+
+    let application_config = application_config::Config::parse();
 
     let side_stack_layout = Layout::new("[[]=]", LayoutConf::default(), side_stack, 1, 0.6);
 
@@ -76,13 +77,20 @@ fn main() -> penrose::Result<()> {
 
     let hooks: Hooks<XcbConnection> = vec![
         Box::new(bar),
-        Box::new(hooks::StartupScript::new(PATH_TO_START_SCRIPT)),
+        Box::new(hooks::StartupScript::new(&application_config.mywm_start_script)),
     ];
 
+    // for reasons that are beyond me, these must be assigned 
+    // to variables and they need extra parenthesis inside macro
+    // https://github.com/sminez/penrose/issues/181
+    let launcher = application_config.mywm_launcher;
+    let terminal = application_config.mywm_terminal;
+
+    #[allow(unused_parens)]
     let key_bindings = gen_keybindings! {
         // Program launchers
-        "M-p" => run_external!(LAUNCHER);
-        "M-Return" => run_external!(TERMINAL);
+        "M-p" => run_external!((&launcher));
+        "M-Return" => run_external!((&terminal));
 
         // Exit Penrose (important to remember this one!)
         "M-A-C-Escape" => run_internal!(exit);
