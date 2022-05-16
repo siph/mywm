@@ -9,3 +9,4 @@ authors = ["Chris Dawkins"]
 [dependencies]
 penrose = "0.2"
 simplelog = "0.8"
+clap = { version = "3.1", features = ["derive", "env"] }

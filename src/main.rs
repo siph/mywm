@@ -3,6 +3,7 @@ extern crate penrose;
 
 mod hooks;
 mod styles;
+mod config;
 
 use std::convert::TryFrom;
 use penrose::{
