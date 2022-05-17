@@ -5,31 +5,43 @@ mod hooks;
 mod styles;
 mod config;
 
+use simplelog::{ LevelFilter, SimpleLogger };
 use std::convert::TryFrom;
 use clap::Parser;
 use penrose::{
     core::{
         config::Config,
         helpers::index_selectors,
-        Layout,
         layout::{
             LayoutConf,
             side_stack,
         }, 
         hooks::Hooks,
+        Layout,
     },
+    xcb::{
+        new_xcb_backed_window_manager, 
+        XcbDraw,
+    },
+    draw::{
+        dwm_bar, 
+        TextStyle,
+        Color,
+    }, 
     logging_error_handler,
-    xcb::{new_xcb_backed_window_manager, XcbDraw},
-    Backward, Forward, Less, More, Selector, draw::{dwm_bar, TextStyle}, __test_helpers::Color, XcbConnection
+    Backward, 
+    Forward, 
+    Less, 
+    More, 
+    Selector, 
+    XcbConnection,
 };
-use simplelog::{LevelFilter, SimpleLogger};
 use styles::{
     colors,
     dimensions,
     PROFONT,
 };
-use config as application_config;
-
+use config::Config as application_config;
 
 fn main() -> penrose::Result<()> {
 
@@ -37,7 +49,7 @@ fn main() -> penrose::Result<()> {
         panic!("unable to set log level: {}", e);
     };
 
-    let application_config = application_config::Config::parse();
+    let application_config = application_config::parse();
 
     let side_stack_layout = Layout::new("[[]=]", LayoutConf::default(), side_stack, 1, 0.6);
 
