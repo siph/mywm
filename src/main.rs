@@ -92,17 +92,11 @@ fn main() -> penrose::Result<()> {
         Box::new(hooks::StartupScript::new(&application_config.mywm_start_script)),
     ];
 
-    // for reasons that are beyond me, these must be assigned 
-    // to variables and they need extra parenthesis inside macro
-    // https://github.com/sminez/penrose/issues/181
-    let launcher = application_config.mywm_launcher;
-    let terminal = application_config.mywm_terminal;
-
-    #[allow(unused_parens)]
+    #[allow(unused_braces)]
     let key_bindings = gen_keybindings! {
         // Program launchers
-        "M-p" => run_external!((&launcher));
-        "M-Return" => run_external!((&terminal));
+        "M-p" => run_external!({&application_config.mywm_launcher});
+        "M-Return" => run_external!({&application_config.mywm_terminal});
 
         // Exit Penrose (important to remember this one!)
         "M-A-C-Escape" => run_internal!(exit);
