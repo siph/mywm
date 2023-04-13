@@ -1,133 +1,96 @@
-#[macro_use]
-extern crate penrose;
-
-mod hooks;
-mod styles;
-mod config;
-
-use simplelog::{ LevelFilter, SimpleLogger };
-use std::convert::TryFrom;
-use clap::Parser;
 use penrose::{
-    core::{
-        config::Config,
-        helpers::index_selectors,
+    builtin::{
+        actions::{exit, log_current_state, modify_with, send_layout_message, spawn},
         layout::{
-            LayoutConf,
-            side_stack,
-        }, 
-        hooks::Hooks,
-        Layout,
+            messages::{ExpandMain, IncMain, ShrinkMain},
+            transformers::{Gaps, ReflectHorizontal, ReserveTop},
+            MainAndStack,
+        },
     },
-    xcb::{
-        new_xcb_backed_window_manager, 
-        XcbDraw,
+    core::{
+        bindings::{parse_keybindings_with_xmodmap, KeyEventHandler},
+        layout::LayoutStack,
+        Config, WindowManager,
     },
-    draw::{
-        dwm_bar, 
-        TextStyle,
-        Color,
-    }, 
-    logging_error_handler,
-    Backward, 
-    Forward, 
-    Less, 
-    More, 
-    Selector, 
-    XcbConnection,
+    extensions::hooks::{add_ewmh_hooks, SpawnOnStartup},
+    map, stack,
+    x11rb::RustConn,
+    Result,
 };
-use styles::{
-    colors,
-    dimensions,
-    PROFONT,
-};
-use config::Config as application_config;
+use std::collections::HashMap;
+use tracing_subscriber::{self, prelude::*};
 
-fn main() -> penrose::Result<()> {
+fn raw_key_bindings() -> HashMap<String, Box<dyn KeyEventHandler<RustConn>>> {
+    let mut raw_bindings = map! {
+        map_keys: |k: &str| k.to_owned();
 
-    if let Err(e) = SimpleLogger::init(LevelFilter::Info, simplelog::Config::default()) {
-        panic!("unable to set log level: {}", e);
+        "M-j" => modify_with(|cs| cs.focus_down()),
+        "M-k" => modify_with(|cs| cs.focus_up()),
+        "M-S-j" => modify_with(|cs| cs.swap_down()),
+        "M-S-k" => modify_with(|cs| cs.swap_up()),
+        "M-S-q" => modify_with(|cs| cs.kill_focused()),
+        "M-Tab" => modify_with(|cs| cs.toggle_tag()),
+        "M-bracketright" => modify_with(|cs| cs.next_screen()),
+        "M-bracketleft" => modify_with(|cs| cs.previous_screen()),
+        "M-grave" => modify_with(|cs| cs.next_layout()),
+        "M-S-grave" => modify_with(|cs| cs.previous_layout()),
+        "M-Up" => send_layout_message(|| IncMain(1)),
+        "M-Down" => send_layout_message(|| IncMain(-1)),
+        "M-Right" => send_layout_message(|| ExpandMain),
+        "M-Left" => send_layout_message(|| ShrinkMain),
+        "M-semicolon" => spawn("dmenu_run"),
+        "M-S-s" => log_current_state(),
+        "M-Return" => spawn("st"),
+        "M-A-Escape" => exit(),
     };
 
-    let application_config = application_config::parse();
+    for tag in &["1", "2", "3", "4", "5", "6", "7", "8", "9"] {
+        raw_bindings.extend([
+            (
+                format!("M-{tag}"),
+                modify_with(move |client_set| client_set.focus_tag(tag)),
+            ),
+            (
+                format!("M-S-{tag}"),
+                modify_with(move |client_set| client_set.move_focused_to_tag(tag)),
+            ),
+        ]);
+    }
 
-    let side_stack_layout = Layout::new("[[]=]", LayoutConf::default(), side_stack, 1, 0.6);
+    raw_bindings
+}
 
-    let floating_classes = vec![
-        "polybar",
-    ];
+fn layouts() -> LayoutStack {
+    let max_main = 1;
+    let ratio = 0.6;
+    let ratio_step = 0.1;
+    let outer_px = 5;
+    let inner_px = 5;
+    let top_px = 18;
 
-    let config = Config::default()
-        .builder()
-        .show_bar(true)
-        .top_bar(true)
-        .layouts(vec![side_stack_layout])
-        .floating_classes(floating_classes)
-        .focused_border(colors::GOKU)?
-        .build()
-        .expect("Unable to build configuration");
+    stack!(
+        MainAndStack::side(max_main, ratio, ratio_step),
+        ReflectHorizontal::wrap(MainAndStack::side(max_main, ratio, ratio_step)),
+        MainAndStack::bottom(max_main, ratio, ratio_step)
+    )
+    .map(|layout| ReserveTop::wrap(Gaps::wrap(layout, outer_px, inner_px), top_px))
+}
 
-    let style = TextStyle {
-        font: PROFONT.to_string(),
-        point_size: 11,
-        fg: Color::try_from(colors::WHITE)?,
-        bg: Some(Color::try_from(colors::BLACK)?),
-        padding: (2.0, 2.0),
-    };
+fn main() -> Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter("trace")
+        .finish()
+        .init();
 
-    let empty_ws = Color::try_from(colors::GREY)?;
-    let draw = XcbDraw::new()?;
+    let config = add_ewmh_hooks(Config {
+        default_layouts: layouts(),
+        startup_hook: Some(SpawnOnStartup::boxed("polybar")),
+        ..Config::default()
+    });
 
-    let bar = dwm_bar(
-        draw,
-        dimensions::HEIGHT,
-        &style,
-        Color::try_from(colors::GOKU)?,
-        empty_ws,
-        config.workspaces().clone(),
-    )?;
+    let conn = RustConn::new()?;
+    let key_bindings = parse_keybindings_with_xmodmap(raw_key_bindings())?;
+    let wm = WindowManager::new(config, key_bindings, HashMap::new(), conn)?;
 
-    let hooks: Hooks<XcbConnection> = vec![
-        Box::new(bar),
-        Box::new(hooks::StartupScript::new(&application_config.mywm_start_script)),
-    ];
-
-    #[allow(unused_braces)]
-    let key_bindings = gen_keybindings! {
-        // Program launchers
-        "M-p" => run_external!({&application_config.mywm_launcher});
-        "M-Return" => run_external!({&application_config.mywm_terminal});
-
-        // Exit Penrose (important to remember this one!)
-        "M-A-C-Escape" => run_internal!(exit);
-
-        // client management
-        "M-j" => run_internal!(cycle_client, Forward);
-        "M-k" => run_internal!(cycle_client, Backward);
-        "M-S-j" => run_internal!(drag_client, Forward);
-        "M-S-k" => run_internal!(drag_client, Backward);
-        "M-f" => run_internal!(toggle_client_fullscreen, &Selector::Focused);
-        "M-c" => run_internal!(kill_client);
-
-        // workspace management
-        "M-Tab" => run_internal!(toggle_workspace);
-        "M-A-period" => run_internal!(cycle_workspace, Forward);
-        "M-A-comma" => run_internal!(cycle_workspace, Backward);
-
-        // Layout management
-        "M-grave" => run_internal!(cycle_layout, Forward);
-        "M-S-grave" => run_internal!(cycle_layout, Backward);
-        "M-A-Up" => run_internal!(update_max_main, More);
-        "M-A-Down" => run_internal!(update_max_main, Less);
-        "M-l" => run_internal!(update_main_ratio, More);
-        "M-h" => run_internal!(update_main_ratio, Less);
-
-        map: { "1", "2", "3", "4", "5", "6", "7", "8", "9" } to index_selectors(9) => {
-             "M-{}" => focus_workspace (REF);
-             "M-S-{}" => client_to_workspace (REF);
-         };
-    };
-
-    let mut wm = new_xcb_backed_window_manager(config, hooks, logging_error_handler())?;
-    wm.grab_keys_and_run(key_bindings, map!{})
+    wm.run()
 }

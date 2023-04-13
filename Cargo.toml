@@ -7,6 +7,6 @@ authors = ["Chris Dawkins"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-penrose = "0.2"
-simplelog = "0.8"
-clap = { version = "3.1", features = ["derive", "env"] }
+penrose = "0.3.1"
+tracing = { version = "0.1.37", feature = ["attributes", "log"] }
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
